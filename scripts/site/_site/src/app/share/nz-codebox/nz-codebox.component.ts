@@ -357,19 +357,19 @@ export class AppModule { }
       description: 'Created with <3 by the StackBlitz SDK!',
       template: 'angular-cli',
       dependencies: {
-        '@angular/animations': '^17.0.0',
-        '@angular/cdk': '^17.0.0',
-        '@angular/common': '^17.0.0',
-        '@angular/compiler': '^17.0.0',
-        '@angular/core': '^17.0.0',
-        '@angular/forms': '^17.0.0',
-        '@angular/platform-browser': '^17.0.0',
-        '@angular/platform-browser-dynamic': '^17.0.0',
-        '@angular/router': '^17.0.0',
-        '@ant-design/icons-angular': '^17.0.0',
+        '@angular/animations': '^18.0.0',
+        '@angular/cdk': '^18.0.0',
+        '@angular/common': '^18.0.0',
+        '@angular/compiler': '^18.0.0',
+        '@angular/core': '^18.0.0',
+        '@angular/forms': '^18.0.0',
+        '@angular/platform-browser': '^18.0.0',
+        '@angular/platform-browser-dynamic': '^18.0.0',
+        '@angular/router': '^18.0.0',
+        '@ant-design/icons-angular': '^18.0.0',
         rxjs: '~7.6.0',
         'zone.js': '~0.14.0',
-        'ng-zorro-antd-mobile': '10.0.0'
+        'ng-zorro-antd-mobile': '11.0.0'
       },
       tags: ['stackblitz', 'sdk']
     });
