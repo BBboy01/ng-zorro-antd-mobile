@@ -1,9 +1,11 @@
 import { DOCUMENT } from '@angular/common';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
-import { Component, ElementRef, Inject, Input, OnInit, ViewEncapsulation } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, Inject, Input, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import sdk from '@stackblitz/sdk';
+import { AppService, DemoCode } from '../../app.service';
+import { Observable, Subject, takeUntil, tap } from 'rxjs';
 
 @Component({
   selector: 'nz-code-box',
@@ -11,14 +13,17 @@ import sdk from '@stackblitz/sdk';
   templateUrl: './nz-codebox.component.html',
   styleUrls: ['./nz-codebox.less']
 })
-export class NzCodeBoxComponent implements OnInit {
+export class NzCodeBoxComponent implements OnInit, OnDestroy {
   _code: string;
   _copied = false;
   _commandCopied = false;
+  highlightCode?: string;
+  copyLoading = false;
+  codeLoaded = false;
   showIframe: boolean;
   simulateIFrame: boolean;
   iframe: SafeUrl;
-  nzWidth = window.innerWidth * 0.8;
+  destroy$ = new Subject<void>();
   @Input() nzTitle: string;
   @Input() nzExpanded = false;
   @Input() nzSelected = false;
@@ -46,35 +51,6 @@ export class NzCodeBoxComponent implements OnInit {
     this._code = value;
   }
 
-  navigateToFragment() {
-    // window.location.hash = this.nzLink;
-  }
-
-  copyCode(code) {
-    this.copy(code).then(() => {
-      this._copied = true;
-      setTimeout(() => {
-        this._copied = false;
-      }, 1000);
-    });
-  }
-
-  handleCancel(): void {
-    this.nzExpanded = false;
-  }
-
-  handleOk(): void {
-    this.nzExpanded = false;
-  }
-
-  nzOkText() {
-    if (window.location.href.split('/').splice(-1)[0] === 'zh') {
-      return '返回';
-    } else {
-      return 'Back';
-    }
-  }
-
   copyGenerateCommand(command) {
     this.copy(command).then(() => {
       this._commandCopied = true;
@@ -85,7 +61,8 @@ export class NzCodeBoxComponent implements OnInit {
   }
 
   copy(value: string): Promise<string> {
-    const promise = new Promise<string>((resolve, reject): void => {
+    return new Promise<string>((resolve): void => {
+      // @ts-ignore
       let copyTextArea = null as HTMLTextAreaElement;
       try {
         copyTextArea = this.dom.createElement('textarea');
@@ -103,9 +80,49 @@ export class NzCodeBoxComponent implements OnInit {
         }
       }
     });
-
-    return promise;
   }
+
+  copyCode(): void {
+    setTimeout(() => {
+      this.copyLoading = !this.codeLoaded;
+      this.cdr.markForCheck();
+    }, 120);
+    this.getDemoCode().subscribe(data => {
+      this.copyLoading = false;
+      this.cdr.markForCheck();
+      this.copy(data.rawCode).then(() => {
+        this._copied = true;
+        setTimeout(() => {
+          this._copied = false;
+          this.cdr.markForCheck();
+        }, 1000);
+      });
+    });
+  }
+
+
+  getDemoCode(): Observable<DemoCode> {
+    return this.appService.getCode(this.nzId).pipe(
+      takeUntil(this.destroy$),
+      tap(data => {
+        if (data) {
+          this.highlightCode = data.highlightCode;
+          this.codeLoaded = true;
+          this.cdr.markForCheck();
+        }
+      })
+    );
+  }
+
+  expandCode(expanded: boolean): void {
+    this.nzExpanded = expanded;
+    if (expanded) {
+      this.getDemoCode().subscribe();
+    }
+    this.cdr.markForCheck();
+  }
+
+
 
   /** bug here https://github.com/stackblitz/core/issues/311 **/
   openOnStackBlitz() {
@@ -361,10 +378,17 @@ export class AppModule { }
   constructor(
     @Inject(DOCUMENT) private dom: Document,
     private sanitizer: DomSanitizer,
+    private appService: AppService,
+    private cdr: ChangeDetectorRef,
     private _el: ElementRef,
     private activatedRoute: ActivatedRoute,
     private router: Router
   ) {}
 
   ngOnInit() {}
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 }
