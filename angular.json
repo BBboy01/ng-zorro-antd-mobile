@@ -73,11 +73,11 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "ng-zorro-antd-mobile:build"
+            "buildTarget": "ng-zorro-antd-mobile:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "ng-zorro-antd-mobile:build:production"
+              "buildTarget": "ng-zorro-antd-mobile:build:production"
             }
           }
         }
